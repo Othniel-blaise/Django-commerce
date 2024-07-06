@@ -4,11 +4,52 @@ from django.contrib.auth import authenticate,login,logout
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
-from .forms import SignUpForm 
+from .forms import SignUpForm, UpdateUserForm,changePasswordForm
 from django import forms 
 
 
 
+def update_password(request):
+    if request.user.is_authenticated:
+        current_user = request.user
+        if request.method == 'POST':
+            form = changePasswordForm(current_user, request.POST)
+
+            if form.is_valid():
+                form.save()
+                messages.success(request,("Your password has been updated, "))
+                login(request,current_user)
+                return redirect('update_password')
+            else: 
+                for error in list(form.errors.values()):
+                    messages.error(request,error)  
+                    return redirect ('update_password')
+        else:
+            form = changePasswordForm(current_user)
+            return render(request,"update_password.html" ,{'form':form})
+    else:
+        messages.success(request,("You must be logged in to access this page."))
+        return redirect('home')
+
+def update_user(request):
+    if request.user.is_authenticated:
+        current_user = User.objects.get(id=request.user.id)
+        user_form =UpdateUserForm(request.POST or None, instance=current_user)
+
+        if user_form.is_valid():
+            user_form.save()
+
+            login(request , current_user)
+            messages.success(request,("Your profile has been updated successfully."))
+            return redirect ('home')
+        return render(request,"update_user.html" ,{'user_form':user_form })
+    else:
+        messages.success(request,("You must be logged in to access this page."))
+        return redirect('home')
+        
+def category_summary(request):
+    categories = Category.objects.all()
+    return render(request,'category_summary.html',{ "categories":categories})
 
 
 
