@@ -1,12 +1,57 @@
 from django.shortcuts import render,redirect
-from .models import Product,Category
+from .models import Product,Category,Profile
 from django.contrib.auth import authenticate,login,logout
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
-from .forms import SignUpForm, UpdateUserForm,changePasswordForm
-from django import forms 
+from .forms import SignUpForm, UpdateUserForm,changePasswordForm,UserInfoForm
+from django import forms
+from django.db.models import Q 
+from payment.forms import ShippingForm
+from payment.models import ShippingAddress
 
+
+
+def search(request):
+    if request.method =="POST":
+        searched = request.POST['searched']
+
+
+        searched = Product.objects.filter(Q(name__icontains=searched) | Q(description__icontains=searched))
+        if not searched:    
+            messages.success(request,"That Product Does Not exist")
+            return render(request,"search.html", {})
+        else:
+            return render(request,"search.html", {"searched":searched})
+
+    else:
+         return render(request,"search.html", {})
+
+
+
+def update_info(request):
+	if request.user.is_authenticated:
+		# Get Current User
+		current_user = Profile.objects.get(user__id=request.user.id)
+		# Get Current User's Shipping Info
+		shipping_user = ShippingAddress.objects.get(user__id=request.user.id)
+		
+		# Get original User Form
+		form = UserInfoForm(request.POST or None, instance=current_user)
+		# Get User's Shipping Form
+		shipping_form = ShippingForm(request.POST or None, instance=shipping_user)		
+		if form.is_valid() or shipping_form.is_valid():
+			# Save original form
+			form.save()
+			# Save shipping form
+			shipping_form.save()
+
+			messages.success(request, "Your Info Has Been Updated!!")
+			return redirect('home')
+		return render(request, "update_info.html", {'form':form, 'shipping_form':shipping_form})
+	else:
+		messages.success(request, "You Must Be Logged In To Access That Page!!")
+		return redirect('home')
 
 
 def update_password(request):
@@ -25,7 +70,7 @@ def update_password(request):
                     messages.error(request,error)  
                     return redirect ('update_password')
         else:
-            form = changePasswordForm(current_user)
+            form = changePasswordForm(current_user,)
             return render(request,"update_password.html" ,{'form':form})
     else:
         messages.success(request,("You must be logged in to access this page."))
@@ -107,24 +152,20 @@ def logout_user(request):
     return redirect('home')
 
 def register_user(request):
-    if request.method == 'POST':
-        form = SignUpForm(request.POST)
-        if form.is_valid():
-            form.save()
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password1']
-            # Authentifier et connecter l'utilisateur
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                login(request, user)
-                messages.success(request, "You have been registered...")
-                return redirect('login')
-            else:
-                messages.error(request, "Authentication failed. Please try again.")
-                return redirect('register')
-        else:
-            messages.error(request, "Whoops! There was an error, please try again.")
-            return render(request, 'register.html', {'form': form})
-    else:
-        form = SignUpForm()
-    return render(request, 'register.html', {'form': form})
+	form = SignUpForm()
+	if request.method == "POST":
+		form = SignUpForm(request.POST)
+		if form.is_valid():
+			form.save()
+			username = form.cleaned_data['username']
+			password = form.cleaned_data['password1']
+			# log in user
+			user = authenticate(username=username, password=password)
+			login(request, user)
+			messages.success(request, ("Username Created - Please Fill Out Your User Info Below..."))
+			return redirect('update_info')
+		else:
+			messages.success(request, ("Whoops! There was a problem Registering, please try again..."))
+			return redirect('register')
+	else:
+		return render(request, 'register.html', {'form':form})
