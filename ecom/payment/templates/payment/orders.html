@@ -29,7 +29,8 @@
 
     {% endfor %}
     <br/><br/>
-    <!-- {% if not order.shipped %}
+    
+    {% if not order.shipped %}
     <form method="POST">
       {% csrf_token %}
       <input type="hidden" name="shipping_status" value="true">
@@ -41,7 +42,7 @@
       {% csrf_token %}
       <input type="hidden" name="shipping_status" value="false">
       <button type="Submit" class="btn btn-danger">Mark As Not Shipped</button>
-    </from> -->
+    </from>
 
     {% endif %}
 
