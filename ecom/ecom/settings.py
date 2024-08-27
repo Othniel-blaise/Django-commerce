@@ -12,9 +12,9 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
-from dotenv import load_dotenv
-import django_heroku
-import dj_database_url
+# from dotenv import load_dotenv
+# import django_heroku
+# import dj_database_url
 # import dj_database_url
 # import psycopg2
 
@@ -25,7 +25,7 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 #load our environment variables
-load_dotenv()
+# load_dotenv()
 
 
 
@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'cart',
     'payment'
     # 'whitenoise.runserver_nostatic',
+    # 'paypal.standar.ipn',
 ]
 
 MIDDLEWARE = [
@@ -159,4 +160,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-django_heroku.settings(locals())
+
+# PayPal settings
+PAYPAL_TEST = True
+
+PAYPAL_RECEIVER_EMAIL = 'atomiqueesty@gmail.com'
+ 
